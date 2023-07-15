@@ -4,8 +4,13 @@
 local PlayerFrameHealthBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarArea.HealthBar
 local PlayerFrameManaBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar
 -- inital setup to never show the manabar
-PlayerFrameManaBar:Hide(); PlayerFrameManaBar:HookScript("OnShow",PlayerFrameManaBar.Hide )
-PlayerFrameManaBar.ManaBarMask:Hide()
+for _,ressourcebar in pairs({
+	PlayerFrameManaBar,
+	InsanityBarFrame
+}) do
+	ressourcebar:Hide()
+	ressourcebar:HookScript("OnShow",ressourcebar.Hide)
+end
 
 local function removeMaskTexture()
 	for _,v in pairs ({
