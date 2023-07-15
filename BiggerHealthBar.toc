@@ -1,7 +1,7 @@
-##Interface: 100105
-##Version: @project-version@
-##Title: BiggerHealthBar
-##Author: Slothpala
+## Interface: 100105
+## Version: @project-version@
+## Title: BiggerHealthBar
+## Author: Slothpala
 ## X-Curse-Project-ID: 684454
 
 BiggerHealthBar.lua
