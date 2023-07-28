@@ -46,6 +46,7 @@ hooksecurefunc("PlayerFrame_ToPlayerArt", function()
 		frameTexture:SetTexCoord(unpack(textures["AlternateFrameTexture"].coords))
 		frameContainer.FrameFlash:SetTexture(textures["AlternateFrameFlash"].path)
 		frameContainer.FrameFlash:SetTexCoord(unpack(textures["AlternateFrameFlash"].coords))
+		PlayerFrameHealthBar.HealthBarMask:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Mask")
 		PlayerFrameHealthBar.HealthBarMask:SetPoint("TOPLEFT",PlayerFrameHealthBar,-2,9)
 		PlayerFrameHealthBar.HealthBarMask:SetPoint("BOTTOMRIGHT",PlayerFrameHealthBar,2,-10)
 	else
