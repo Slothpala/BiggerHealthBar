@@ -17,7 +17,7 @@ end
 local textures = {
 	FrameTexture = {
 		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_FrameTexture.tga",
-		coords = {26.5/256, 223.5/256, 27/128, 97/128}
+		coords = {26/256, 224/256, 26/128, 97/128}
 	},
 	FrameFlash = {
 		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_FrameFlash.tga",
@@ -25,7 +25,7 @@ local textures = {
 	},
 	AlternateFrameTexture = {
 		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_AlternateFrameTexture.tga",
-		coords = {26.5/256, 223.5/256, 27/128, 100/128}
+		coords = {26/256, 224/256, 26/128, 100/128}
 	},
 	AlternateFrameFlash = {
 		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_AlternateFrameFlash.tga",
