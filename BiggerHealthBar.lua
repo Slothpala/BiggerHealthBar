@@ -5,12 +5,14 @@
 local PlayerFrameHealthBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarArea.HealthBar
 local PowerBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar
 -- inital setup to never show the manabar
-for _,ressourcebar in pairs({
+for _,resourcebar in pairs({
 	PowerBar,
 	InsanityBarFrame,
 }) do
-	ressourcebar:Hide()
-	ressourcebar:HookScript("OnShow",ressourcebar.Hide)
+	resourcebar:SetAlpha(0)
+	resourcebar:HookScript("OnShow",function()
+		resourcebar:SetAlpha(0)
+	end)
 end
 
 --coords left,right,top,bottom
