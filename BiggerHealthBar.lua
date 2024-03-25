@@ -1,66 +1,82 @@
 --[[
-	Created by Slothpala 
---]]
+	Slothpala
+	UNIT_FRAME_SHOW_HEALTH_ONLY = true would be nice but taints the UI since PlayerFrame_ToVehicleArt/PlayerFrame_ToPlayerArt 
+	call SetSize on the player healthbar. 
+]]
 
-local PlayerFrameHealthBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarArea.HealthBar
-local PowerBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar
--- inital setup to never show the manabar
-for _,resourcebar in pairs({
-	PowerBar,
+local healthBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarArea.HealthBar
+local resourceBars = {
+	PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar,
 	InsanityBarFrame,
-}) do
-	resourcebar:SetAlpha(0)
-	resourcebar:HookScript("OnShow",function()
-		resourcebar:SetAlpha(0)
+	AlternatePowerBar,
+	MonkStaggerBar,
+}
+local frameTexture = PlayerFrame.PlayerFrameContainer.FrameTexture
+local alternatePowerFrameTexture = PlayerFrame.PlayerFrameContainer.AlternatePowerFrameTexture
+local frameFlash = PlayerFrame.PlayerFrameContainer.FrameFlash
+
+--[[
+	Hide the power bars and keep them hidden
+]]
+
+for i=1, #resourceBars do
+	local statusBar = resourceBars[i]
+	statusBar:SetAlpha(0) --hiding it can cause taint
+	statusBar:HookScript("OnShow", function()
+		statusBar:SetAlpha(0)
 	end)
 end
 
---coords left,right,top,bottom
-local textures = {
-	FrameTexture = {
-		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_FrameTexture.tga",
-		coords = {26/256, 224/256, 26/128, 97/128}
-	},
-	FrameFlash = {
-		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_FrameFlash.tga",
-		coords = {27.5/256, 219/256, 26/128, 96/128}
-	},
-	AlternateFrameTexture = {
-		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_AlternateFrameTexture.tga",
-		coords = {26/256, 224/256, 26/128, 100/128}
-	},
-	AlternateFrameFlash = {
-		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_AlternateFrameFlash.tga",
-		coords = {27.5/256, 219/256, 26/128, 96.5/128}
-	},
-	Mask = {
-		path = "Interface\\AddOns\\BiggerHealthBar\\Textures\\BiggerHealthBar_PlayerFrameHealthMask.tga",
-		coords = {2/128, 126/128, 15/64, 52/64}
-	},
-} 
+--[[
+	Method to delay changes on protected regions
+]]
 
-hooksecurefunc("PlayerFrame_ToPlayerArt", function()
-	local frameContainer = PlayerFrame.PlayerFrameContainer
-	local isAlterntePowerFrame = PlayerFrame.activeAlternatePowerBar
-	local frameTexture = isAlterntePowerFrame and frameContainer.AlternatePowerFrameTexture or frameContainer.FrameTexture
-	if isAlterntePowerFrame then
-		frameTexture:SetTexture(textures["AlternateFrameTexture"].path)
-		frameTexture:SetTexCoord(unpack(textures["AlternateFrameTexture"].coords))
-		frameContainer.FrameFlash:SetTexture(textures["AlternateFrameFlash"].path)
-		frameContainer.FrameFlash:SetTexCoord(unpack(textures["AlternateFrameFlash"].coords))
-		PlayerFrameHealthBar.HealthBarMask:SetAtlas("UI-HUD-UnitFrame-Player-PortraitOn-Bar-Health-Mask")
-		PlayerFrameHealthBar.HealthBarMask:SetPoint("TOPLEFT",PlayerFrameHealthBar,-2,9)
-		PlayerFrameHealthBar.HealthBarMask:SetPoint("BOTTOMRIGHT",PlayerFrameHealthBar,2,-10)
-	else
-		frameTexture:SetTexture(textures["FrameTexture"].path)
-		frameTexture:SetTexCoord(unpack(textures["FrameTexture"].coords))
-		frameContainer.FrameFlash:SetTexture(textures["FrameFlash"].path)
-		frameContainer.FrameFlash:SetTexCoord(unpack(textures["FrameFlash"].coords))
-		PlayerFrameHealthBar.HealthBarMask:SetTexture(textures["Mask"].path)
-		PlayerFrameHealthBar.HealthBarMask:SetPoint("TOPLEFT",PlayerFrameHealthBar,-3,7)
-		PlayerFrameHealthBar.HealthBarMask:SetPoint("BOTTOMRIGHT",PlayerFrameHealthBar,2,-12)
-	end
-	PlayerFrameHealthBar:SetHeight(31)
+local callback = function() end
+local eventFrame = CreateFrame("Frame")
+eventFrame:SetScript("OnEvent", function()
+	callback()
+	eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 end)
 
+local function Delay(func)
+	callback = func
+	eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+end
 
+--[[
+	Hook into PlayerFrame_ToPlayerArt/PlayerFrame_ToVehicleArt and apply the settings that the game would do if UNIT_FRAME_SHOW_HEALTH_ONLY existed.
+]]
+
+local function OnToPlayerArt()
+	-- frame textures
+	frameTexture:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton")
+	frameTexture:Show()
+	alternatePowerFrameTexture:Hide()
+	-- status textures
+	frameFlash:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-incombat", TextureKitConstants.UseAtlasSize)
+	frameFlash:SetPoint("CENTER", frameFlash:GetParent(), "CENTER", -1, 0.5);
+	-- resize health bar
+	healthBar:SetHeight(32)
+	healthBar.HealthBarMask:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-bar-health-mask")
+	healthBar.HealthBarMask:SetHeight(37)
+end
+
+hooksecurefunc("PlayerFrame_ToPlayerArt", function()
+	if InCombatLockdown() then
+		Delay(OnToPlayerArt)
+		return
+	end
+	OnToPlayerArt()
+end)
+
+local function OnToVehicleArt()
+	healthBar:SetHeight(32)
+end
+
+hooksecurefunc("PlayerFrame_ToVehicleArt", function()
+	if InCombatLockdown() then
+		Delay(OnToVehicleArt)
+		return
+	end
+	OnToVehicleArt()
+end)
