@@ -4,7 +4,8 @@
 	call SetSize on the player healthbar. 
 ]]
 
-local healthBar = PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarArea.HealthBar
+local healthBar = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBar
+local healthBarMask = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBarMask
 local resourceBars = {
 	PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar,
 	InsanityBarFrame,
@@ -57,8 +58,15 @@ local function OnToPlayerArt()
 	frameFlash:SetPoint("CENTER", frameFlash:GetParent(), "CENTER", -1, 0.5);
 	-- resize health bar
 	healthBar:SetHeight(32)
-	healthBar.HealthBarMask:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-bar-health-mask")
-	healthBar.HealthBarMask:SetHeight(37)
+	healthBarMask:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-bar-health-mask")
+	healthBarMask:SetHeight(37)
+	-- Font since tww the halth text is anchored to the container.
+	local healthTextLeft = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.LeftText
+	local healthTextMiddle = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBarText
+	local healthTextRight = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.RightText
+	healthTextLeft:SetPoint("LEFT", healthBar, "LEFT")
+	healthTextMiddle:SetPoint("CENTER", healthBar, "CENTER")
+	healthTextRight:SetPoint("RIGHT", healthBar, "RIGHT")
 end
 
 hooksecurefunc("PlayerFrame_ToPlayerArt", function()
