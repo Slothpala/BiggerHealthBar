@@ -1,90 +1,62 @@
 --[[
-	Slothpala
-	UNIT_FRAME_SHOW_HEALTH_ONLY = true would be nice but taints the UI since PlayerFrame_ToVehicleArt/PlayerFrame_ToPlayerArt 
-	call SetSize on the player healthbar. 
+    MODIFICATION NOTICE:
+    Changed by Danderlion on February 1, 2026.
+    Fixes:
+    - Updated frame paths for the Midnight (12.0) API.
+    - Replaced the global 'Delay' callback with PLAYER_REGEN_ENABLED to prevent UI taints.
+    - Adjusted HealthBarsContainer references for compatibility with TWW/Midnight UI.
 ]]
 
-local healthBar = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBar
-local healthBarMask = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBarMask
-local resourceBars = {
-	PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.ManaBarArea.ManaBar,
-	InsanityBarFrame,
-	AlternatePowerBar,
-	MonkStaggerBar,
-}
-local frameTexture = PlayerFrame.PlayerFrameContainer.FrameTexture
-local alternatePowerFrameTexture = PlayerFrame.PlayerFrameContainer.AlternatePowerFrameTexture
-local frameFlash = PlayerFrame.PlayerFrameContainer.FrameFlash
+-- Original Author: Slothpala
+-- Maintained by: Danderlion
 
---[[
-	Hide the power bars and keep them hidden
-]]
+local function ApplyPlunderstyle()
+    -- Safety check: If we are in combat, wait until out of combat to resize
+    if InCombatLockdown() then return end
 
-for i=1, #resourceBars do
-	local statusBar = resourceBars[i]
-	statusBar:SetAlpha(0) --hiding it can cause taint
-	statusBar:HookScript("OnShow", function()
-		statusBar:SetAlpha(0)
-	end)
+    -- 1. Corrected Frame Paths for 12.0
+    local container = PlayerFrame.PlayerFrameContent and PlayerFrame.PlayerFrameContent.PlayerFrameContentMain
+    if not container then return end
+
+    local healthBar = container.HealthBarsContainer.HealthBar
+    local healthBarMask = container.HealthBarsContainer.HealthBarMask
+    local frameTexture = PlayerFrame.PlayerFrameContainer.FrameTexture
+    local frameFlash = PlayerFrame.PlayerFrameContainer.FrameFlash
+
+    -- 2. Apply Textures
+    frameTexture:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton")
+    frameFlash:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-incombat", true)
+    
+    -- 3. Resize Health (The "Big Bar" look)
+    healthBar:SetHeight(32)
+    healthBarMask:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-bar-health-mask")
+    healthBarMask:SetHeight(37)
+
+    -- 4. Corrected Resource Bar Hiding (12.0 Safe Method)
+    local resourceBars = {
+        container.ManaBarArea, -- Targets the whole area including Mana/Energy
+        InsanityBarFrame,
+        AlternatePowerBar,
+        MonkStaggerBar,
+    }
+
+    for _, bar in ipairs(resourceBars) do
+        if bar then
+            bar:SetAlpha(0)
+            if not bar.hooked then
+                bar:HookScript("OnShow", function(s) s:SetAlpha(0) end)
+                bar.hooked = true
+            end
+        end
+    end
 end
 
---[[
-	Method to delay changes on protected regions
-]]
+-- 5. Tactical Hooking
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_REGEN_ENABLED") -- Fixes things after combat
+f:SetScript("OnEvent", ApplyPlunderstyle)
 
-local callback = function() end
-local eventFrame = CreateFrame("Frame")
-eventFrame:SetScript("OnEvent", function()
-	callback()
-	eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
-end)
-
-local function Delay(func)
-	callback = func
-	eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-end
-
---[[
-	Hook into PlayerFrame_ToPlayerArt/PlayerFrame_ToVehicleArt and apply the settings that the game would do if UNIT_FRAME_SHOW_HEALTH_ONLY existed.
-]]
-
-local function OnToPlayerArt()
-	-- frame textures
-	frameTexture:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton")
-	frameTexture:Show()
-	alternatePowerFrameTexture:Hide()
-	-- status textures
-	frameFlash:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-incombat", TextureKitConstants.UseAtlasSize)
-	frameFlash:SetPoint("CENTER", frameFlash:GetParent(), "CENTER", -1, 0.5);
-	-- resize health bar
-	healthBar:SetHeight(32)
-	healthBarMask:SetAtlas("plunderstorm-ui-hud-unitframe-player-portraiton-bar-health-mask")
-	healthBarMask:SetHeight(37)
-	-- Font since tww the halth text is anchored to the container.
-	local healthTextLeft = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.LeftText
-	local healthTextMiddle = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.HealthBarText
-	local healthTextRight = _G.PlayerFrame.PlayerFrameContent.PlayerFrameContentMain.HealthBarsContainer.RightText
-	healthTextLeft:SetPoint("LEFT", healthBar, "LEFT")
-	healthTextMiddle:SetPoint("CENTER", healthBar, "CENTER")
-	healthTextRight:SetPoint("RIGHT", healthBar, "RIGHT")
-end
-
-hooksecurefunc("PlayerFrame_ToPlayerArt", function()
-	if InCombatLockdown() then
-		Delay(OnToPlayerArt)
-		return
-	end
-	OnToPlayerArt()
-end)
-
-local function OnToVehicleArt()
-	healthBar:SetHeight(32)
-end
-
-hooksecurefunc("PlayerFrame_ToVehicleArt", function()
-	if InCombatLockdown() then
-		Delay(OnToVehicleArt)
-		return
-	end
-	OnToVehicleArt()
-end)
+-- Secure Hooks to catch Vehicle/Normal swaps
+hooksecurefunc("PlayerFrame_ToPlayerArt", ApplyPlunderstyle)
+hooksecurefunc("PlayerFrame_ToVehicleArt", ApplyPlunderstyle)

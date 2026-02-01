@@ -1,7 +1,9 @@
-## Interface: 110000
-## Version: @project-version@
-## Title: BiggerHealthBar
-## Author: Slothpala
+## Interface: 120000
+## Version: 2.2.1-12.0
+## Title: BiggerHealthBar (Midnight Fix)
+## Notes: A continuation of Slothpala's BiggerHealthBar, updated for 12.0. Resizes player health and hides resource bars.
+## Author: Slothpala (Maintained by Danderlion)
 ## X-Curse-Project-ID: 684454
+## License: GPL v2
 
 BiggerHealthBar.lua
